@@ -16,7 +16,10 @@ class Mesh {
   // 3. Only points
   int mode;
 
-  int tipoComponente = QUADS;
+  int tipoComponente = TRIANGLES;
+  int cantidadVertices = 0;
+  float escala = 0.05;
+  PVector vecCentrar = new PVector(0,-100, -30);
 
   // visual hints
   boolean boundingSphere;
@@ -30,20 +33,37 @@ class Mesh {
   // compute both mesh vertices and pshape
   // TODO: implement me
   void build() {
+    shape = loadShape("scorpion.obj");
+    shape.scale(escala);
+    shape.translate(vecCentrar.x, vecCentrar.y, vecCentrar.z);
+    
+
+    // vertices = new ArrayList<PVector>();    
+    // // for example if we were to render a quad:
+    // vertices.add(new PVector(-150,150,0));
+    // vertices.add(new PVector(150,150,0));
+    // vertices.add(new PVector(150,-150,0));
+    // vertices.add(new PVector(-150,-150,0));
+    // //...
+
+    //Itera a través de los hijos y luego a traves de cada vertice y los asigna al arreglo de vertices
     vertices = new ArrayList<PVector>();
+    for (int i = 0; i < shape.getChildCount(); i++) {
+      for (int j = 0; j < shape.getChild(i).getVertexCount(); j++) {
+      //println("shape.getChild(i).getVertex(j): "+shape.getChild(i).getVertex(j));
+      vertices.add(shape.getChild(i).getVertex(j).mult(escala).add(vecCentrar));
+      cantidadVertices += 1;
+      }
+    }
+
+    println("Cantidad de vertices: " + cantidadVertices);
+
     
-    // for example if we were to render a quad:
-    vertices.add(new PVector(-150,150,0));
-    vertices.add(new PVector(150,150,0));
-    vertices.add(new PVector(150,-150,0));
-    vertices.add(new PVector(-150,-150,0));
-    //...
-    
-    shape = createShape();
-    shape.beginShape(QUADS);
-    for(PVector v : vertices)
-      shape.vertex(v.x, v.y ,v.z);
-    shape.endShape();
+    // shape = createShape();
+    // shape.beginShape(QUADS);
+    // for(PVector v : vertices)
+    //   shape.vertex(v.x, v.y ,v.z);
+    // shape.endShape();
 
     shapePunto = createShape();
     shapePunto.beginShape(POINTS);
@@ -68,7 +88,8 @@ class Mesh {
     for(PVector v : vertices)
       vertex(v.x, v.y ,v.z);
     endShape();
-    tipoComponente  = QUADS;
+    tipoComponente  = TRIANGLES;
+
   }
 
   void draw() {
@@ -103,7 +124,6 @@ class Mesh {
     // rendering modes
     if (retained){
       if(mode == 3){
-        //stroke(color(255));
         //println(shapePunto.getVertexCount() + "shapePunto.getVertexCount");
         shape(shapePunto);
       }
