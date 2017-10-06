@@ -99,7 +99,7 @@ class Mesh {
     // manipuate me as you wish
     int strokeWeight = 3;
     color lineColor = color(255, retained ? 0 : 255, 0);
-    color faceColor = color(0, retained ? 0 : 255, 255, 100);
+    color faceColor = color(0, retained ? 0 : 255, 255, 255);
     
     strokeWeight(strokeWeight);
     stroke(lineColor);
