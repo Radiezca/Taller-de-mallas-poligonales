@@ -31,4 +31,6 @@ void keyPressed() {
     mesh.retained = !mesh.retained;
   if (key == 'b')
     mesh.boundingSphere = !mesh.boundingSphere;
+  if (key == 'a')
+    mesh.representacion = mesh.representacion < 3 ? mesh.representacion+1 : 0;
 }
