@@ -78,12 +78,74 @@ class Mesh {
     
   }
 
+  void crear_lista_PVectores_repetidos(){
+    HashMap<Integer, Integer> repetidos_map = new HashMap<Integer, Integer>();
+
+    //llave es el indice identificador del vertices y tiene un valor que es el primer vertice repetido. ambos enteros
+    for (int i = 0; i < vertices.size(); ++i) {
+      //no necesito agregar a el mismo ya que con el sí necesito se cree el vertice en las listas de representación.
+      for (int j =i+1; j < vertices.size(); ++j) {
+        //Si el vertice ya esta agregado no hace la comparacion pues ya lo tiene asignado.
+        if(!repetidos_map.containsKey(i) ){
+          if(vertices.get(i).equals(vertices.get(j) ) ){
+            repetidos_map.put(j, i );
+          }
+        }
+      }  
+    }
+    
+    println("repetidos_map.size(): "+repetidos_map.size());
+    println("repetidos_map.entrySet(): "+repetidos_map.entrySet());
+    // println("repetidos_map.keySet(): "+repetidos_map.keySet());
+    // println("repetidos_map.values(): "+repetidos_map.values());
+    
+/*    // Using an enhanced loop to interate over each entry
+    for (HashMap.Entry<Integer,Integer> me : repetidos_map.entrySet()) {
+      print(me.getKey() + " is ");
+      println(me.getValue());
+    }*/
+
+
+  }
+
   // compute both mesh vertices and pshape
   // TODO: implement me
   void build() {
     shape = loadShape("scorpion.obj");
     shape.scale(escala);
     shape.translate(vecCentrar.x, vecCentrar.y, vecCentrar.z);
+
+    //Processing FV
+    //Itera a través de los hijos y luego a traves de cada vertice y los asigna al arreglo de vertices
+    vertices = new ArrayList<PVector>();
+    for (int i = 0; i < shape.getChildCount(); i++) {
+      for (int j = 0; j < shape.getChild(i).getVertexCount(); j++) {
+      //println("shape.getChild(i).getVertex(j): "+shape.getChild(i).getVertex(j));
+      vertices.add(shape.getChild(i).getVertex(j).mult(escala).add(vecCentrar));
+      }
+    }
+
+    println("Cantidad de vertices: " + vertices.size());
+
+    //crear_lista_PVectores_repetidos();
+    
+    // shape = createShape();
+    // shape.beginShape(QUADS);
+    // for(PVector v : vertices)
+    //   shape.vertex(v.x, v.y ,v.z);
+    // shape.endShape();
+
+    shapePunto = createShape();
+    shapePunto.beginShape(POINTS);
+    shapePunto.strokeWeight(3);
+    shapePunto.stroke(255, 0, 0);
+    for(PVector v : vertices)
+      shapePunto.vertex(v.x, v.y ,v.z);
+    shapePunto.endShape();
+
+    //Por defecto dibuja la forma cargada.
+    shape_dibujar = shape;
+
 
     //WE
     crea_lista_vertices_dibujar_desde_winged_edge();    
@@ -145,38 +207,7 @@ class Mesh {
     // vertices.add(new PVector(150,150,0));
     // vertices.add(new PVector(150,-150,0));
     // vertices.add(new PVector(-150,-150,0));
-    
-    
-    //Processing FV
-    //Itera a través de los hijos y luego a traves de cada vertice y los asigna al arreglo de vertices
-    vertices = new ArrayList<PVector>();
-    for (int i = 0; i < shape.getChildCount(); i++) {
-      for (int j = 0; j < shape.getChild(i).getVertexCount(); j++) {
-      //println("shape.getChild(i).getVertex(j): "+shape.getChild(i).getVertex(j));
-      vertices.add(shape.getChild(i).getVertex(j).mult(escala).add(vecCentrar));
-      }
-    }
 
-    println("Cantidad de vertices: " + vertices.size());
-
-    
-    // shape = createShape();
-    // shape.beginShape(QUADS);
-    // for(PVector v : vertices)
-    //   shape.vertex(v.x, v.y ,v.z);
-    // shape.endShape();
-
-    shapePunto = createShape();
-    shapePunto.beginShape(POINTS);
-    shapePunto.strokeWeight(3);
-    shapePunto.stroke(255, 0, 0);
-    for(PVector v : vertices)
-      shapePunto.vertex(v.x, v.y ,v.z);
-    shapePunto.endShape();
-
-
-    //Por defecto shape para dibujar tiene la forma cargada.
-    shape_dibujar = shape;
   }
 
   void crea_lista_vertices_dibujar_desde_winged_edge(){
@@ -200,8 +231,8 @@ class Mesh {
     int num_vert;
 
     for (int i = 0; i < shape.getChildCount(); i ++) {
-      //sumarde 3 en 3 y agregar las 3 aristas de una ves.
-      // ir creando al lista de caras de una vez. A cada arista extraerle la cara y agregarla a la lista de caras.
+      //suma de 3 en 3 y agregar las 3 aristas de una ves.
+      // ir creando la lista de caras de una vez. A cada arista extraerle la cara y agregarla a la lista de caras.
       // utilizar los ID de las aristas y de la lista de aristas extraer los vertices, eligiendo el primer vertice de
       // cada arista para solo obtener 3 necesarios para construir el triangulo      
       for (int j = 0; j < shape.getChild(i).getVertexCount(); j +=3) {
@@ -221,6 +252,14 @@ class Mesh {
         list_WE_aris.add( new WE_arista(num_vert, list_WE_cara.get(i), list_WE_vert.get(num_vert), list_WE_vert.get(num_vert +1) ) );
         list_WE_aris.add( new WE_arista(num_vert +1, list_WE_cara.get(i), list_WE_vert.get(num_vert +1), list_WE_vert.get(num_vert +2) ) );
         list_WE_aris.add( new WE_arista(num_vert +2, list_WE_cara.get(i), list_WE_vert.get(num_vert +2), list_WE_vert.get(num_vert) ) );
+
+        //Agregar los vertices vecinos.En orden Counter Clockwise.
+        list_WE_aris.get(num_vert).nextA = list_WE_aris.get(num_vert+1);
+        list_WE_aris.get(num_vert).prevA = list_WE_aris.get(num_vert+2);
+        list_WE_aris.get(num_vert+1).nextA = list_WE_aris.get(num_vert+2);
+        list_WE_aris.get(num_vert+1).prevA = list_WE_aris.get(num_vert);
+        list_WE_aris.get(num_vert+2).nextA = list_WE_aris.get(num_vert+1);
+        list_WE_aris.get(num_vert+2).prevA = list_WE_aris.get(num_vert);
 
         //Agregar las aristas que le pertenecen a cada cara 
         list_WE_cara.get(i).aristasCara.add(list_WE_aris.get(num_vert ) );
@@ -338,6 +377,12 @@ class Mesh {
         list_DR_aris.add( new DR_arista( list_DR_cara.get(i), list_DR_vert.get(num_vert), list_DR_vert.get(num_vert +1) ) );
         list_DR_aris.add( new DR_arista( list_DR_cara.get(i), list_DR_vert.get(num_vert +1), list_DR_vert.get(num_vert +2) ) );
         list_DR_aris.add( new DR_arista( list_DR_cara.get(i), list_DR_vert.get(num_vert +2), list_DR_vert.get(num_vert) ) );
+        list_DR_aris.get(num_vert).nextA = list_DR_aris.get(num_vert+1);
+        list_DR_aris.get(num_vert).prevA = list_DR_aris.get(num_vert+2);
+        list_DR_aris.get(num_vert+1).nextA = list_DR_aris.get(num_vert+2);
+        list_DR_aris.get(num_vert+1).prevA = list_DR_aris.get(num_vert);
+        list_DR_aris.get(num_vert+2).nextA = list_DR_aris.get(num_vert+1);
+        list_DR_aris.get(num_vert+2).prevA = list_DR_aris.get(num_vert);
       }
     }
   }
@@ -440,7 +485,7 @@ class Mesh {
     //Representaciones
     switch(representacion) {
     case 0:
-      println("Processing FV");
+      //println("Processing FV");
 
       if (mode == 3) {
         shape_dibujar = shapePunto;        
@@ -453,7 +498,7 @@ class Mesh {
 
 
     case 1:
-      println("FV");
+      //println("FV");
 
       if (mode == 3) {
         shape_dibujar = shapeFV_punto;        
@@ -466,7 +511,7 @@ class Mesh {
 
 
     case 2:
-      println("WE");
+      //println("WE");
       if (mode == 3) {
         shape_dibujar = shapeWE_punto;        
       }
@@ -476,7 +521,7 @@ class Mesh {
       break;
 
     case 3:
-      println("Dynamic");
+      //println("Dynamic");
 
       if (mode == 3) {
         shape_dibujar = shapeDR_punto;
